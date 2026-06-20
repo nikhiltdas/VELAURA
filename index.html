@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Velaura — Every Event Finds Its Aura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #080808;
+    --near-black: #111111;
+    --card: #161616;
+    --gold: #C9A84C;
+    --gold-light: #E8D5A3;
+    --gold-dim: rgba(201,168,76,0.18);
+    --ivory: #F0EBE1;
+    --muted: rgba(240,235,225,0.45);
+    --border: rgba(201,168,76,0.2);
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --sans: 'Jost', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--ivory);
+    font-family: var(--sans);
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ── CURSOR ── */
+  .cursor {
+    position: fixed; top: 0; left: 0; width: 8px; height: 8px;
+    background: var(--gold); border-radius: 50%; pointer-events: none;
+    z-index: 9999; transform: translate(-50%, -50%);
+    transition: transform 0.1s ease, width 0.3s ease, height 0.3s ease, background 0.3s ease;
+  }
+  .cursor-ring {
+    position: fixed; top: 0; left: 0; width: 36px; height: 36px;
+    border: 1px solid rgba(201,168,76,0.5); border-radius: 50%; pointer-events: none;
+    z-index: 9998; transform: translate(-50%,-50%);
+    transition: transform 0.18s ease, width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 28px 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: background 0.4s, padding 0.4s;
+  }
+  nav.scrolled {
+    background: rgba(8,8,8,0.92);
+    backdrop-filter: blur(20px);
+    padding: 18px 60px;
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: var(--serif); font-size: 22px; font-weight: 400; letter-spacing: 4px;
+    color: var(--gold); text-decoration: none; text-transform: uppercase;
+  }
+  .nav-links { display: flex; gap: 42px; list-style: none; }
+  .nav-links a {
+    font-family: var(--sans); font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); text-decoration: none; transition: color 0.3s;
+    position: relative;
+  }
+  .nav-links a::after {
+    content: ''; position: absolute; bottom: -4px; left: 0; right: 0;
+    height: 1px; background: var(--gold); transform: scaleX(0);
+    transition: transform 0.3s ease; transform-origin: left;
+  }
+  .nav-links a:hover { color: var(--gold); }
+  .nav-links a:hover::after { transform: scaleX(1); }
+  .nav-cta {
+    font-family: var(--sans); font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--black); background: var(--gold);
+    padding: 11px 26px; text-decoration: none;
+    transition: background 0.3s, color 0.3s;
+  }
+  .nav-cta:hover { background: var(--gold-light); }
+
+  /* ── HERO ── */
+  #hero {
+    position: relative; min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    text-align: center; overflow: hidden;
+  }
+  #canvas-bg {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    font-family: var(--sans); font-size: 10px; letter-spacing: 5px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 28px; opacity: 0;
+    animation: fadeUp 1s 0.4s forwards;
+  }
+  .hero-title {
+    font-family: var(--serif); font-size: clamp(64px, 10vw, 130px);
+    font-weight: 300; line-height: 0.92; letter-spacing: -1px;
+    color: var(--ivory); margin-bottom: 32px; opacity: 0;
+    animation: fadeUp 1s 0.7s forwards;
+  }
+  .hero-title em { font-style: italic; color: var(--gold); }
+  .hero-sub {
+    font-family: var(--sans); font-size: 13px; font-weight: 200; letter-spacing: 4px;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 56px; opacity: 0;
+    animation: fadeUp 1s 1s forwards;
+  }
+  .hero-sub span { color: var(--gold); }
+  .hero-actions {
+    display: flex; gap: 20px; justify-content: center; align-items: center;
+    opacity: 0; animation: fadeUp 1s 1.2s forwards;
+  }
+  .btn-primary {
+    font-family: var(--sans); font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--black); background: var(--gold);
+    padding: 16px 40px; text-decoration: none; display: inline-block;
+    transition: background 0.3s, transform 0.2s;
+  }
+  .btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); }
+  .btn-ghost {
+    font-family: var(--sans); font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--gold); border: 1px solid var(--border);
+    padding: 16px 40px; text-decoration: none; display: inline-block;
+    transition: border-color 0.3s, background 0.3s, transform 0.2s;
+  }
+  .btn-ghost:hover { border-color: var(--gold); background: var(--gold-dim); transform: translateY(-2px); }
+  .hero-scroll {
+    position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    opacity: 0; animation: fadeIn 1s 1.8s forwards;
+  }
+  .hero-scroll span {
+    font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: var(--muted);
+  }
+  .scroll-line {
+    width: 1px; height: 48px; background: linear-gradient(to bottom, var(--gold), transparent);
+    animation: scrollPulse 2s infinite;
+  }
+
+  /* ── SECTION SHARED ── */
+  section { padding: 120px 60px; }
+  .section-label {
+    font-size: 9px; letter-spacing: 5px; text-transform: uppercase; color: var(--gold);
+    margin-bottom: 16px; display: flex; align-items: center; gap: 16px;
+  }
+  .section-label::before { content: ''; width: 30px; height: 1px; background: var(--gold); }
+  .section-title {
+    font-family: var(--serif); font-size: clamp(38px, 5vw, 68px);
+    font-weight: 300; line-height: 1.08; color: var(--ivory);
+  }
+  .section-title em { font-style: italic; color: var(--gold); }
+
+  /* ── ABOUT ── */
+  #about { display: grid; grid-template-columns: 1fr 1fr; gap: 100px; align-items: center; }
+  .about-visual {
+    position: relative; height: 560px;
+  }
+  .about-frame {
+    position: absolute; inset: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .about-frame-inner {
+    width: 100%; height: 100%;
+    background: radial-gradient(ellipse at 30% 60%, rgba(201,168,76,0.12) 0%, transparent 60%);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .about-monogram {
+    font-family: var(--serif); font-size: 180px; font-weight: 300;
+    color: rgba(201,168,76,0.08); line-height: 1; user-select: none;
+  }
+  .about-badge {
+    position: absolute; bottom: -24px; right: -24px;
+    background: var(--gold); padding: 28px 32px; text-align: center;
+  }
+  .about-badge-num {
+    font-family: var(--serif); font-size: 48px; font-weight: 400; color: var(--black);
+    line-height: 1;
+  }
+  .about-badge-label {
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--black);
+    opacity: 0.7; margin-top: 4px;
+  }
+  .about-content { padding-right: 20px; }
+  .about-body {
+    margin-top: 28px; font-size: 15px; color: var(--muted); line-height: 1.9;
+  }
+  .about-body p + p { margin-top: 18px; }
+  .about-stats { margin-top: 48px; display: flex; gap: 48px; }
+  .stat-item { border-top: 1px solid var(--border); padding-top: 20px; }
+  .stat-num {
+    font-family: var(--serif); font-size: 44px; font-weight: 300; color: var(--gold);
+    line-height: 1;
+  }
+  .stat-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+
+  /* ── SERVICES ── */
+  #services { background: var(--near-black); }
+  .services-header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: 72px;
+  }
+  .services-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
+  }
+  .service-card {
+    background: var(--card); padding: 52px 40px;
+    position: relative; overflow: hidden; cursor: default;
+    transition: background 0.4s;
+    border: 1px solid transparent;
+  }
+  .service-card::before {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+    height: 2px; background: var(--gold); transform: scaleX(0);
+    transition: transform 0.4s ease; transform-origin: left;
+  }
+  .service-card:hover { background: #1a1a1a; border-color: var(--border); }
+  .service-card:hover::before { transform: scaleX(1); }
+  .service-num {
+    font-family: var(--serif); font-size: 13px; font-weight: 300;
+    color: var(--gold); opacity: 0.6; margin-bottom: 32px; display: block;
+  }
+  .service-icon {
+    font-size: 28px; margin-bottom: 24px; display: block;
+    filter: grayscale(0.2);
+  }
+  .service-name {
+    font-family: var(--serif); font-size: 28px; font-weight: 400;
+    color: var(--ivory); margin-bottom: 16px; line-height: 1.2;
+  }
+  .service-desc { font-size: 13px; color: var(--muted); line-height: 1.8; }
+  .service-arrow {
+    position: absolute; bottom: 32px; right: 32px;
+    font-size: 20px; color: var(--gold); opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  .service-card:hover .service-arrow { opacity: 1; transform: translate(4px, -4px); }
+
+  /* ── PROCESS ── */
+  #process { max-width: 1100px; margin: 0 auto; }
+  .process-track {
+    margin-top: 72px; position: relative;
+    padding-left: 60px;
+  }
+  .process-track::before {
+    content: ''; position: absolute; left: 0; top: 12px; bottom: 12px;
+    width: 1px; background: var(--border);
+  }
+  .process-step {
+    position: relative; padding-bottom: 64px; padding-left: 52px;
+  }
+  .process-step:last-child { padding-bottom: 0; }
+  .process-dot {
+    position: absolute; left: -60px; top: 6px;
+    width: 10px; height: 10px; border-radius: 50%;
+    border: 1px solid var(--gold); background: var(--black);
+    transition: background 0.3s;
+  }
+  .process-step:hover .process-dot { background: var(--gold); }
+  .process-num {
+    font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 12px;
+  }
+  .process-name {
+    font-family: var(--serif); font-size: 32px; font-weight: 300;
+    color: var(--ivory); margin-bottom: 14px;
+  }
+  .process-desc { font-size: 14px; color: var(--muted); max-width: 520px; line-height: 1.8; }
+
+  /* ── EVENTS SHOWCASE ── */
+  #events { background: var(--near-black); }
+  .events-intro {
+    max-width: 540px; margin-bottom: 72px;
+  }
+  .events-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 2px;
+  }
+  .event-card {
+    position: relative; overflow: hidden; cursor: pointer;
+    background: var(--card);
+  }
+  .event-card:first-child {
+    grid-row: 1 / 3;
+  }
+  .event-bg {
+    width: 100%; height: 100%; min-height: 240px;
+    display: flex; align-items: flex-end;
+    padding: 36px 32px;
+    background-size: cover; background-position: center;
+    position: relative;
+  }
+  .event-card:first-child .event-bg { min-height: 500px; }
+  .event-bg::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(8,8,8,0.85) 0%, transparent 55%);
+    transition: opacity 0.4s;
+  }
+  .event-card:hover .event-bg::before { opacity: 0.95; }
+  .event-overlay { position: relative; z-index: 1; }
+  .event-tag {
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 8px; display: block;
+  }
+  .event-title {
+    font-family: var(--serif); font-size: 26px; font-weight: 400;
+    color: var(--ivory); line-height: 1.2;
+  }
+  .event-card:first-child .event-title { font-size: 38px; }
+
+  /* Gradient backgrounds for event cards */
+  .ev1 { background: radial-gradient(ellipse at 40% 30%, rgba(201,168,76,0.15) 0%, #0e0e0e 70%); }
+  .ev2 { background: radial-gradient(ellipse at 60% 60%, rgba(201,168,76,0.1) 0%, #0e0e0e 70%); }
+  .ev3 { background: radial-gradient(ellipse at 30% 50%, rgba(201,168,76,0.08) 0%, #0e0e0e 70%); }
+  .ev4 { background: radial-gradient(ellipse at 50% 30%, rgba(201,168,76,0.12) 0%, #0e0e0e 70%); }
+  .ev5 { background: radial-gradient(ellipse at 70% 70%, rgba(201,168,76,0.1) 0%, #0e0e0e 70%); }
+
+  /* ── TESTIMONIALS ── */
+  #testimonials { padding: 120px 60px; }
+  .testimonials-header { margin-bottom: 72px; }
+  .testimonials-slider {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
+  }
+  .testimonial-card {
+    background: var(--card); padding: 48px 40px;
+    border: 1px solid transparent; transition: border-color 0.3s;
+  }
+  .testimonial-card:hover { border-color: var(--border); }
+  .testimonial-stars {
+    color: var(--gold); font-size: 12px; letter-spacing: 3px; margin-bottom: 28px;
+  }
+  .testimonial-quote {
+    font-family: var(--serif); font-size: 19px; font-weight: 300; font-style: italic;
+    color: var(--ivory); line-height: 1.6; margin-bottom: 32px;
+  }
+  .testimonial-author { border-top: 1px solid var(--border); padding-top: 24px; }
+  .testimonial-name { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
+  .testimonial-event { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* ── CONTACT ── */
+  #contact {
+    background: var(--near-black);
+    display: grid; grid-template-columns: 1fr 1fr; gap: 100px; align-items: start;
+  }
+  .contact-info {}
+  .contact-body { margin-top: 28px; font-size: 14px; color: var(--muted); line-height: 1.9; }
+  .contact-details { margin-top: 48px; display: flex; flex-direction: column; gap: 24px; }
+  .contact-detail { display: flex; gap: 20px; align-items: flex-start; }
+  .contact-detail-icon { color: var(--gold); font-size: 16px; margin-top: 2px; flex-shrink: 0; }
+  .contact-detail-text { font-size: 13px; color: var(--muted); }
+  .contact-detail-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 4px; }
+  .contact-form { display: flex; flex-direction: column; gap: 20px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+  .form-group label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--ivory); font-family: var(--sans); font-size: 13px; font-weight: 300;
+    padding: 14px 18px; outline: none; transition: border-color 0.3s;
+    appearance: none;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus { border-color: var(--gold); }
+  .form-group input::placeholder,
+  .form-group textarea::placeholder { color: rgba(240,235,225,0.2); }
+  .form-group textarea { resize: none; height: 120px; }
+  .form-group select option { background: var(--card); }
+  .form-submit {
+    font-family: var(--sans); font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--black); background: var(--gold);
+    padding: 18px 40px; border: none; cursor: pointer;
+    transition: background 0.3s, transform 0.2s; align-self: flex-start;
+  }
+  .form-submit:hover { background: var(--gold-light); transform: translateY(-2px); }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 60px 60px 40px;
+    border-top: 1px solid var(--border);
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 40px;
+  }
+  .footer-logo {
+    font-family: var(--serif); font-size: 20px; font-weight: 400; letter-spacing: 4px;
+    color: var(--gold); text-transform: uppercase;
+  }
+  .footer-tagline { font-size: 11px; letter-spacing: 2px; color: var(--muted); margin-top: 6px; }
+  .footer-links { display: flex; gap: 32px; justify-content: center; }
+  .footer-links a { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.3s; }
+  .footer-links a:hover { color: var(--gold); }
+  .footer-copy { font-size: 10px; color: rgba(240,235,225,0.2); text-align: right; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.4; transform: scaleY(1); }
+    50% { opacity: 1; transform: scaleY(1.1); }
+  }
+
+  .reveal {
+    opacity: 0; transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal-delay-1 { transition-delay: 0.15s; }
+  .reveal-delay-2 { transition-delay: 0.3s; }
+  .reveal-delay-3 { transition-delay: 0.45s; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    nav { padding: 24px 28px; }
+    nav.scrolled { padding: 16px 28px; }
+    .nav-links, .nav-cta { display: none; }
+    section { padding: 80px 28px; }
+    #about { grid-template-columns: 1fr; gap: 60px; }
+    .about-visual { height: 320px; }
+    .services-grid { grid-template-columns: 1fr; }
+    .events-grid { grid-template-columns: 1fr; }
+    .event-card:first-child { grid-row: auto; }
+    .testimonials-slider { grid-template-columns: 1fr; }
+    #contact { grid-template-columns: 1fr; gap: 60px; }
+    footer { grid-template-columns: 1fr; text-align: center; gap: 24px; }
+    .footer-copy { text-align: center; }
+    .form-row { grid-template-columns: 1fr; }
+    .services-header { flex-direction: column; align-items: flex-start; gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nav-logo">Velaura</a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#events">Events</a></li>
+    <li><a href="#testimonials">Stories</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Begin Planning</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="canvas-bg"></canvas>
+  <p class="hero-eyebrow">Luxury Event Planning</p>
+  <h1 class="hero-title">Every Event<br/><em>Finds Its</em><br/>Aura</h1>
+  <p class="hero-sub">Weddings · Baptisms · Galas · <span>Milestones</span></p>
+  <div class="hero-actions">
+    <a href="#events" class="btn-primary">Explore Our Work</a>
+    <a href="#contact" class="btn-ghost">Plan Your Event</a>
+  </div>
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="about-visual reveal">
+    <div class="about-frame">
+      <div class="about-frame-inner">
+        <span class="about-monogram">V</span>
+      </div>
+    </div>
+    <div class="about-badge">
+      <div class="about-badge-num">8+</div>
+      <div class="about-badge-label">Years of Craft</div>
+    </div>
+  </div>
+  <div class="about-content">
+    <div class="section-label reveal">Our Philosophy</div>
+    <h2 class="section-title reveal reveal-delay-1">Where <em>Vision</em><br/>Becomes Memory</h2>
+    <div class="about-body reveal reveal-delay-2">
+      <p>At Velaura, we believe every celebration deserves its own language — a distinct atmosphere, a personal narrative, a sensory world built just for you and the people you love.</p>
+      <p>We don't plan events. We compose experiences. From the first conversation to the final farewell, our role is to translate your vision into something that feels inevitable — as though it could have never been any other way.</p>
+    </div>
+    <div class="about-stats reveal reveal-delay-3">
+      <div class="stat-item">
+        <div class="stat-num">400+</div>
+        <div class="stat-label">Events Crafted</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">98%</div>
+        <div class="stat-label">Client Satisfaction</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">12</div>
+        <div class="stat-label">Expert Curators</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="services-header">
+    <div>
+      <div class="section-label reveal">What We Offer</div>
+      <h2 class="section-title reveal reveal-delay-1">Our <em>Specialties</em></h2>
+    </div>
+    <a href="#contact" class="btn-ghost reveal reveal-delay-2" style="white-space:nowrap">View All Services</a>
+  </div>
+  <div class="services-grid">
+    <div class="service-card reveal">
+      <span class="service-num">01</span>
+      <span class="service-icon">💍</span>
+      <h3 class="service-name">Luxury Weddings</h3>
+      <p class="service-desc">From intimate garden ceremonies to grand ballroom spectacles — we craft weddings that breathe with your love story, down to the last petal.</p>
+      <span class="service-arrow">↗</span>
+    </div>
+    <div class="service-card reveal reveal-delay-1">
+      <span class="service-num">02</span>
+      <span class="service-icon">✨</span>
+      <h3 class="service-name">Baptisms & Christenings</h3>
+      <p class="service-desc">Sacred first celebrations deserve an atmosphere of grace and wonder. We bring reverence and warmth to every milestone of faith.</p>
+      <span class="service-arrow">↗</span>
+    </div>
+    <div class="service-card reveal reveal-delay-2">
+      <span class="service-num">03</span>
+      <span class="service-icon">🥂</span>
+      <h3 class="service-name">Galas & Corporate</h3>
+      <p class="service-desc">Elevate your brand or celebrate your team with events that command attention and leave a lasting impression on every guest.</p>
+      <span class="service-arrow">↗</span>
+    </div>
+    <div class="service-card reveal">
+      <span class="service-num">04</span>
+      <span class="service-icon">🎂</span>
+      <h3 class="service-name">Birthday Milestones</h3>
+      <p class="service-desc">Whether it's a first birthday or a golden one, we design celebrations that honour the journey and the person at the centre of it all.</p>
+      <span class="service-arrow">↗</span>
+    </div>
+    <div class="service-card reveal reveal-delay-1">
+      <span class="service-num">05</span>
+      <span class="service-icon">🌸</span>
+      <h3 class="service-name">Engagements & Proposals</h3>
+      <p class="service-desc">The moment before the wedding — planned with the same care. We create the setting for a yes that echoes through a lifetime.</p>
+      <span class="service-arrow">↗</span>
+    </div>
+    <div class="service-card reveal reveal-delay-2">
+      <span class="service-num">06</span>
+      <span class="service-icon">🎗️</span>
+      <h3 class="service-name">Themed & Private Events</h3>
+      <p class="service-desc">Anniversaries, reunions, farewell galas — if it matters to you, it matters to us. Fully bespoke, fully yours.</p>
+      <span class="service-arrow">↗</span>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section id="process" style="padding:120px 60px;">
+  <div class="section-label reveal">How We Work</div>
+  <h2 class="section-title reveal reveal-delay-1">The <em>Velaura</em> Method</h2>
+  <div class="process-track">
+    <div class="process-step reveal">
+      <div class="process-dot"></div>
+      <div class="process-num">Step One</div>
+      <h3 class="process-name">The Vision Conversation</h3>
+      <p class="process-desc">We begin by listening — deeply. Your story, your aesthetics, your dreams for the day. Every detail you share becomes a thread we weave into something extraordinary.</p>
+    </div>
+    <div class="process-step reveal reveal-delay-1">
+      <div class="process-dot"></div>
+      <div class="process-num">Step Two</div>
+      <h3 class="process-name">Concept & Curation</h3>
+      <p class="process-desc">We translate your vision into a fully realised concept — mood boards, floor plans, timelines, vendor curation. You see it before it exists.</p>
+    </div>
+    <div class="process-step reveal reveal-delay-2">
+      <div class="process-dot"></div>
+      <div class="process-num">Step Three</div>
+      <h3 class="process-name">Seamless Execution</h3>
+      <p class="process-desc">On the day, you are a guest at your own event. Our team handles every moving part with quiet precision — so you can simply be present.</p>
+    </div>
+    <div class="process-step reveal reveal-delay-3">
+      <div class="process-dot"></div>
+      <div class="process-num">Step Four</div>
+      <h3 class="process-name">The Lasting Aura</h3>
+      <p class="process-desc">The evening ends, but the memory endures. We document, reflect, and celebrate with you long after the last light dims.</p>
+    </div>
+  </div>
+</section>
+
+<!-- EVENTS -->
+<section id="events" style="padding:120px 60px;background:var(--near-black);">
+  <div class="events-intro">
+    <div class="section-label reveal">Portfolio</div>
+    <h2 class="section-title reveal reveal-delay-1">Events We've <em>Brought to Life</em></h2>
+  </div>
+  <div class="events-grid">
+    <div class="event-card">
+      <div class="event-bg ev1" style="min-height:500px;">
+        <div class="event-overlay">
+          <span class="event-tag">Featured · 2024</span>
+          <h3 class="event-title" style="font-size:38px;">The Mehta–Nair Wedding</h3>
+        </div>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-bg ev2">
+        <div class="event-overlay">
+          <span class="event-tag">Baptism</span>
+          <h3 class="event-title">Grace & Light Ceremony</h3>
+        </div>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-bg ev3">
+        <div class="event-overlay">
+          <span class="event-tag">Gala</span>
+          <h3 class="event-title">Aurelius Foundation Evening</h3>
+        </div>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-bg ev4">
+        <div class="event-overlay">
+          <span class="event-tag">Milestone Birthday</span>
+          <h3 class="event-title">The Golden Fifty</h3>
+        </div>
+      </div>
+    </div>
+    <div class="event-card">
+      <div class="event-bg ev5">
+        <div class="event-overlay">
+          <span class="event-tag">Engagement</span>
+          <h3 class="event-title">Rooftop Proposal, Kochi</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="testimonials-header">
+    <div class="section-label reveal">What Clients Say</div>
+    <h2 class="section-title reveal reveal-delay-1">Stories That <em>Stay With Us</em></h2>
+  </div>
+  <div class="testimonials-slider">
+    <div class="testimonial-card reveal">
+      <div class="testimonial-stars">★ ★ ★ ★ ★</div>
+      <p class="testimonial-quote">"Velaura transformed our wedding vision into something we couldn't have imagined on our own. Every single detail was intentional, alive, and deeply us."</p>
+      <div class="testimonial-author">
+        <div class="testimonial-name">Priya & Arjun Mehta</div>
+        <div class="testimonial-event">Garden Wedding · Trivandrum, 2024</div>
+      </div>
+    </div>
+    <div class="testimonial-card reveal reveal-delay-1">
+      <div class="testimonial-stars">★ ★ ★ ★ ★</div>
+      <p class="testimonial-quote">"From the first call to the last dance, we never once worried. That kind of trust is rare. Velaura made our daughter's baptism genuinely sacred."</p>
+      <div class="testimonial-author">
+        <div class="testimonial-name">The D'Souza Family</div>
+        <div class="testimonial-event">Baptism Ceremony · Kochi, 2024</div>
+      </div>
+    </div>
+    <div class="testimonial-card reveal reveal-delay-2">
+      <div class="testimonial-stars">★ ★ ★ ★ ★</div>
+      <p class="testimonial-quote">"Our company gala exceeded every expectation. Guests are still talking about it months later. Velaura understands what 'premium' truly means."</p>
+      <div class="testimonial-author">
+        <div class="testimonial-name">Ravi Krishnan, CEO</div>
+        <div class="testimonial-event">Corporate Gala · Chennai, 2023</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-info">
+    <div class="section-label reveal">Get In Touch</div>
+    <h2 class="section-title reveal reveal-delay-1">Let's Create<br/><em>Something</em><br/>Unforgettable</h2>
+    <p class="contact-body reveal reveal-delay-2">Every great event begins with a single conversation. Tell us your dream — we'll take it from there.</p>
+    <div class="contact-details reveal reveal-delay-3">
+      <div class="contact-detail">
+        <span class="contact-detail-icon">◈</span>
+        <div class="contact-detail-text">
+          <div class="contact-detail-label">Location</div>
+          Thiruvananthapuram, Kerala, India
+        </div>
+      </div>
+      <div class="contact-detail">
+        <span class="contact-detail-icon">◈</span>
+        <div class="contact-detail-text">
+          <div class="contact-detail-label">Email</div>
+          hello@velaura.in
+        </div>
+      </div>
+      <div class="contact-detail">
+        <span class="contact-detail-icon">◈</span>
+        <div class="contact-detail-text">
+          <div class="contact-detail-label">Phone</div>
+          +91 98470 00000
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="contact-form reveal reveal-delay-2">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Your Name</label>
+        <input type="text" placeholder="Full name" />
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" placeholder="your@email.com" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Event Type</label>
+        <select>
+          <option value="" disabled selected>Select event type</option>
+          <option>Wedding</option>
+          <option>Baptism / Christening</option>
+          <option>Birthday Milestone</option>
+          <option>Engagement / Proposal</option>
+          <option>Corporate Gala</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Approximate Date</label>
+        <input type="text" placeholder="Month / Year" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Tell Us About Your Vision</label>
+      <textarea placeholder="Describe your dream event — the feeling, the scale, the essence..."></textarea>
+    </div>
+    <button class="form-submit">Send Enquiry →</button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-logo">Velaura</div>
+    <div class="footer-tagline">— Every Event Finds Its Aura —</div>
+  </div>
+  <div class="footer-links">
+    <a href="#about">About</a>
+    <a href="#services">Services</a>
+    <a href="#events">Portfolio</a>
+    <a href="#contact">Contact</a>
+  </div>
+  <div class="footer-copy">© 2026 Velaura Event Planners. All rights reserved.</div>
+</footer>
+
+<script>
+// ── CUSTOM CURSOR ──
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx = 0, my = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+function animateCursor() {
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) * 0.12;
+  cursor.style.left = mx + 'px';
+  cursor.style.top = my + 'px';
+  ring.style.left = rx + 'px';
+  ring.style.top = ry + 'px';
+  requestAnimationFrame(animateCursor);
+}
+animateCursor();
+document.querySelectorAll('a, button, .service-card, .event-card, input, select, textarea').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cursor.style.width = '16px'; cursor.style.height = '16px';
+    ring.style.width = '60px'; ring.style.height = '60px'; ring.style.opacity = '0.5';
+  });
+  el.addEventListener('mouseleave', () => {
+    cursor.style.width = '8px'; cursor.style.height = '8px';
+    ring.style.width = '36px'; ring.style.height = '36px'; ring.style.opacity = '1';
+  });
+});
+
+// ── NAV SCROLL ──
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// ── CANVAS PARTICLE AURA ──
+const canvas = document.getElementById('canvas-bg');
+const ctx = canvas.getContext('2d');
+function resizeCanvas() {
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+const GOLD = [201, 168, 76];
+const particles = [];
+for (let i = 0; i < 80; i++) {
+  particles.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 1.5 + 0.3,
+    a: Math.random() * Math.PI * 2,
+    speed: Math.random() * 0.3 + 0.05,
+    opacity: Math.random() * 0.5 + 0.1,
+    drift: (Math.random() - 0.5) * 0.4,
+  });
+}
+
+// sparkle stars
+const stars = [];
+for (let i = 0; i < 12; i++) {
+  stars.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    size: Math.random() * 4 + 2,
+    phase: Math.random() * Math.PI * 2,
+    speed: Math.random() * 0.01 + 0.005,
+  });
+}
+
+function drawSparkle(x, y, size, opacity) {
+  ctx.save();
+  ctx.globalAlpha = opacity;
+  ctx.strokeStyle = `rgb(${GOLD})`;
+  ctx.lineWidth = 0.8;
+  ctx.translate(x, y);
+  for (let a = 0; a < 4; a++) {
+    ctx.save();
+    ctx.rotate(a * Math.PI / 2);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, -size);
+    ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+let frame = 0;
+function animateCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // subtle radial glow
+  const grd = ctx.createRadialGradient(
+    canvas.width * 0.5, canvas.height * 0.45, 0,
+    canvas.width * 0.5, canvas.height * 0.45, canvas.width * 0.45
+  );
+  grd.addColorStop(0, 'rgba(201,168,76,0.04)');
+  grd.addColorStop(1, 'transparent');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // drifting particles
+  particles.forEach(p => {
+    p.y -= p.speed;
+    p.x += p.drift;
+    if (p.y < -4) { p.y = canvas.height + 4; p.x = Math.random() * canvas.width; }
+    if (p.x < -4) p.x = canvas.width + 4;
+    if (p.x > canvas.width + 4) p.x = -4;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${GOLD}, ${p.opacity})`;
+    ctx.fill();
+  });
+
+  // twinkling sparkles
+  stars.forEach(s => {
+    s.phase += s.speed;
+    const pulse = (Math.sin(s.phase) + 1) / 2;
+    drawSparkle(s.x, s.y, s.size * pulse, 0.15 + 0.3 * pulse);
+  });
+
+  frame++;
+  requestAnimationFrame(animateCanvas);
+}
+animateCanvas();
+
+// ── SCROLL REVEAL ──
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+}, { threshold: 0.1 });
+reveals.forEach(el => observer.observe(el));
+
+// ── FORM SUBMIT ──
+document.querySelector('.form-submit').addEventListener('click', function() {
+  const inputs = document.querySelectorAll('#contact input, #contact textarea, #contact select');
+  let valid = true;
+  inputs.forEach(i => { if (!i.value) valid = false; });
+  if (!valid) {
+    this.textContent = 'Please fill all fields →';
+    setTimeout(() => this.textContent = 'Send Enquiry →', 2000);
+    return;
+  }
+  this.textContent = 'Enquiry Sent ✓';
+  this.style.background = '#2a7a4b';
+  this.style.color = '#fff';
+  setTimeout(() => {
+    this.textContent = 'Send Enquiry →';
+    this.style.background = '';
+    this.style.color = '';
+  }, 3000);
+});
+</script>
+</body>
+</html>
